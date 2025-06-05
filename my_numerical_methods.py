@@ -169,7 +169,7 @@ def rel_err(I_real, I_approx):
     return res
 
 
-# In[3]:
+# In[15]:
 
 
 #root finders
@@ -243,6 +243,7 @@ class RootFinders:
         return c, iter_count
 
     def newton(self):
+
         """
         Newton's method to find the root of a function using an initial guess.
     
@@ -260,24 +261,21 @@ class RootFinders:
         """
         x = self.a  # Initial guess
         iter_count = 0
-        for _ in range(self.max_iter):
-            try:
-                fx = self.func(x)
-                if abs(fx) < self.tol:  # Check for convergence
-                    return x, iter_count
-                derivative = self.derivative(x)
-                if abs(derivative) < 1e-10:  # Derivative is too close to zero
-                    # Fall back to bisection
-                    print("Derivative is too close to zero. Falling back to bisection method.")
-                    return self.bisection()
-                x = x - fx / derivative
-                iter_count += 1
-            except OverflowError:
-                print("Overflow encountered in Newton's method. Falling back to bisection method.")
+        max_iter = 1000  # Increased maximum number of iterations
+        for _ in range(max_iter):
+            fx = self.func(x)
+            if abs(fx) < self.tol:  # Check for convergence
+                return x, iter_count
+            derivative = self.derivative(x)
+            if abs(derivative) < 1e-10:  # Derivative is too close to zero
+                # Fall back to bisection
+                print("Derivative is too close to zero. Falling back to bisection method.")
                 return self.bisection()
+            x = x - fx / derivative
+            iter_count += 1
         # If the loop completes without converging, raise an error
         raise ValueError("Newton's method did not converge within the maximum number of iterations.")
-
+        
     def secant(self):
         """
         Secant method to find the root of a function using two initial guesses.
@@ -296,23 +294,18 @@ class RootFinders:
         """
         x0, x1 = self.a, self.b
         iter_count = 0
-        while abs(self.func(x1)) > self.tol and iter_count < self.max_iter:
+        while abs(self.func(x1)) > self.tol:
             iter_count += 1
-            try:
-                denominator = self.func(x1) - self.func(x0)
-                if abs(denominator) < 1e-10:  # Denominator is too close to zero
-                    # Use a small fixed step size
-                    step = 1e-5 if self.func(x1) > 0 else -1e-5
-                else:
-                    step = self.func(x1) * (x1 - x0) / denominator
+            denominator = self.func(x1) - self.func(x0)
+            if abs(denominator) < 1e-10:  # Denominator is too close to zero
+                # Use a small fixed step size
+                step = 1e-5 if self.func(x1) > 0 else -1e-5
+            else:
+                step = self.func(x1) * (x1 - x0) / denominator
                 x2 = x1 - step
                 x0, x1 = x1, x2
-            except OverflowError:
-                print("Overflow encountered in Secant method. Falling back to bisection method.")
-                return self.bisection()
         
         return x1, iter_count
-
 
     def derivative(self, x, h=1e-5):
         """
